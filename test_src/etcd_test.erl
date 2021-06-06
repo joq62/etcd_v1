@@ -104,6 +104,9 @@ pass_3()->
     {atomic,[ok]}=db_host_info:delete("c0","192.168.0.200",22,"joq62","festum01"),
     [{"c0","192.168.1.200",22,"joq62","festum01"}]=db_host_info:read("c0"),
 
+    {atomic,ok}=etcd:cluster_info_create("glurk_cluster","glurk_cookie"),
+    "glurk_cluster"=etcd:cluster_name(),
+    "glurk_cookie"=etcd:cluster_cookie(),
     ok.
 
 %% --------------------------------------------------------------------

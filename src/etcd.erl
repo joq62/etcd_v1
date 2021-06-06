@@ -38,7 +38,10 @@
 -export([is_leader/0,
 	 host_info_create/5,
 	 host_info_delete/5,
-	 host_info_read/1]).
+	 host_info_read/1,
+	 cluster_info_create/2,
+	 cluster_name/0,
+	 cluster_cookie/0]).
 
 -export([install/0]).
 
@@ -90,6 +93,14 @@ stop()-> gen_server:call(?MODULE, {stop},infinity).
 
 
 %%---------------- Etcd ------------------------------------------------
+cluster_info_create(ClusterName,Cookie)->
+    gen_server:call(?MODULE,{cluster_info_create,ClusterName,Cookie},infinity).
+
+cluster_name()->
+    gen_server:call(?MODULE,{cluster_name},infinity).
+cluster_cookie()->
+    gen_server:call(?MODULE,{cluster_cookie},infinity).
+
 is_leader()->
     gen_server:call(?MODULE,{is_leader},infinity).
 host_info_create(HostId,Ip,SshPort,UId,Pwd)->
@@ -172,6 +183,18 @@ handle_call({ping}, _From, State) ->
     Reply={pong,node(),?MODULE},
     {reply, Reply, State};
 
+%-----------------
+handle_call({cluster_info_create,ClusterName,Cookie}, _From, State) ->
+    Reply=db_cluster_info:create(ClusterName,Cookie),
+    {reply, Reply, State};
+handle_call({cluster_name}, _From, State) ->
+    Reply=db_cluster_info:name(),
+    {reply, Reply, State};
+handle_call({cluster_cookie}, _From, State) ->
+    Reply=db_cluster_info:cookie(),
+    {reply, Reply, State};
+
+%-----------------
 
 handle_call({host_info_create,HostId,Ip,SshPort,UId,Pwd}, _From, State) ->
     Reply=db_host_info:create(HostId,Ip,SshPort,UId,Pwd),

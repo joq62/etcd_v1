@@ -41,10 +41,11 @@ start()->
     mnesia:start(),
 
     %% Create tables 
+    %--------------- lock
     ok=db_lock:create_table(),
     {atomic,ok}=db_lock:create(controller_leader,?ControllerLeaderTime),
 
-    %---
+    %--------------- host info
     ok=db_host_info:create_table(),
     ok=load_config(?HostConfigDir,?HostFile,?GitHostConfigCmd),
     {ok,HostInfoConfig}=read_config(?HostFile),
@@ -54,7 +55,8 @@ start()->
 	     {ssh_port,SshPort},
 	     {uid,UId},
 	     {pwd,Pwd}]<-HostInfoConfig],
-    %--
+    %------------- cluster info
+     ok=db_cluster_info:create_table(),
     ok.
 
 
