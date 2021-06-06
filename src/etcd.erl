@@ -39,6 +39,7 @@
 	 host_info_create/5,
 	 host_info_delete/5,
 	 host_info_read/1,
+	 host_info_all/0,
 	 cluster_info_create/2,
 	 cluster_name/0,
 	 cluster_cookie/0]).
@@ -109,6 +110,8 @@ host_info_delete(HostId,Ip,SshPort,UId,Pwd)->
     gen_server:call(?MODULE,{host_info_delete,HostId,Ip,SshPort,UId,Pwd},infinity).
 host_info_read(HostId)->
     gen_server:call(?MODULE,{host_info_read,HostId},infinity).
+host_info_all()->
+    gen_server:call(?MODULE,{host_info_all},infinity).
 
 
 %%----------------------------------------------------------------------
@@ -194,7 +197,10 @@ handle_call({cluster_cookie}, _From, State) ->
     Reply=db_cluster_info:cookie(),
     {reply, Reply, State};
 
-%-----------------
+%-------------------------
+handle_call({host_info_all}, _From, State) ->
+    Reply=db_host_info:read_all(),
+    {reply, Reply, State};
 
 handle_call({host_info_create,HostId,Ip,SshPort,UId,Pwd}, _From, State) ->
     Reply=db_host_info:create(HostId,Ip,SshPort,UId,Pwd),
@@ -206,6 +212,8 @@ handle_call({host_info_delete,HostId,Ip,SshPort,UId,Pwd}, _From, State) ->
 handle_call({host_info_read,HostId}, _From, State) ->
     Reply=db_host_info:read(HostId),
     {reply, Reply, State};
+
+%--------------------------
 
 handle_call({sys_info}, _From, State) ->
     Reply=mnesia:system_info(),

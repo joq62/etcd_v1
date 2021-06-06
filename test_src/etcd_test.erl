@@ -107,6 +107,15 @@ pass_3()->
     {atomic,ok}=etcd:cluster_info_create("glurk_cluster","glurk_cookie"),
     "glurk_cluster"=etcd:cluster_name(),
     "glurk_cookie"=etcd:cluster_cookie(),
+
+    [{"c2","192.168.0.202",22,"joq62","festum01"},
+     {"c2","192.168.1.202",22,"joq62","festum01"},
+     {"c1","192.168.0.201",22,"joq62","festum01"},
+     {"c1","192.168.1.201",22,"joq62","festum01"},
+     {"c0","192.168.1.200",22,"joq62","festum01"},
+     {"joq62-X550CA","192.168.0.100",22,"joq62","festum01"},
+     {"joq62-X550CA","192.168.1.50",22,"joq62","festum01"}
+    ]=db_host_info:read_all(),
     ok.
 
 %% --------------------------------------------------------------------
