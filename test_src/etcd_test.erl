@@ -40,17 +40,17 @@ start()->
 %    ok=pass_0(),
 %    io:format("~p~n",[{"Stop pass_0()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-    io:format("~p~n",[{"Start pass_1()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=pass_1(),
-    io:format("~p~n",[{"Stop pass_1()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    io:format("~p~n",[{"Start pass_1()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    ok=pass_1(),
+%    io:format("~p~n",[{"Stop pass_1()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-  %  io:format("~p~n",[{"Start pass_2()",?MODULE,?FUNCTION_NAME,?LINE}]),
-   % ok=pass_2(),
-  %  io:format("~p~n",[{"Stop pass_2()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    io:format("~p~n",[{"Start pass_2()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    ok=pass_2(),
+%    io:format("~p~n",[{"Stop pass_2()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-  %  io:format("~p~n",[{"Start pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
-  %  ok=pass_3(),
-  %  io:format("~p~n",[{"Stop pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    io:format("~p~n",[{"Start pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=pass_3(),
+    io:format("~p~n",[{"Stop pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
   %  io:format("~p~n",[{"Start pass_4()",?MODULE,?FUNCTION_NAME,?LINE}]),
   %  ok=pass_4(),
@@ -99,7 +99,10 @@ pass_5()->
 %% Returns: non
 %% --------------------------------------------------------------------
 pass_3()->
-  
+    [{"c0",_,22,"joq62","festum01"},
+     {"c0",_,22,"joq62","festum01"}]=db_host_info:read("c0"),
+    {atomic,[ok]}=db_host_info:delete("c0","192.168.0.200",22,"joq62","festum01"),
+    [{"c0","192.168.1.200",22,"joq62","festum01"}]=db_host_info:read("c0"),
 
     ok.
 
@@ -119,8 +122,19 @@ pass_4()->
 %% Returns: non
 %% --------------------------------------------------------------------
 pass_2()->
+    ok=cluster_lib:load_config(?HostConfigDir,?HostFile,?GitHostConfigCmd),
+    {ok,HostInfoConfig}=cluster_lib:read_config(?HostFile),
+    [etcd:host_info_create(HostId,Ip,SshPort,UId,Pwd)||
+	    [{host_id,HostId},
+	     {ip,Ip},
+	     {ssh_port,SshPort},
+	     {uid,UId},
+	     {pwd,Pwd}]<-HostInfoConfig],
 
-
+    [{"c0",_,22,"joq62","festum01"},
+     {"c0",_,22,"joq62","festum01"}]=etcd:host_info_read("c0"),
+    {atomic,[ok]}=etcd:host_info_delete("c0","192.168.0.200",22,"joq62","festum01"),
+    [{"c0","192.168.1.200",22,"joq62","festum01"}]=etcd:host_info_read("c0"),
     
     ok.
 
@@ -130,49 +144,62 @@ pass_2()->
 %% Returns: non
 %% --------------------------------------------------------------------
 pass_1()->
-    
-
     ok=cluster_lib:load_config(?HostConfigDir,?HostFile,?GitHostConfigCmd),
-    {ok,[[{host_id,"joq62-X550CA"},
-	  {ip,"192.168.0.100"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}],
-	 [{host_id,"joq62-X550CA"},
-	  {ip,"192.168.1.50"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}],
-	 [{host_id,"c0"},
-	  {ip,"192.168.0.200"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}],
-	 [{host_id,"c0"},
-	  {ip,"192.168.1.200"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}],
-	 [{host_id,"c1"},
-	  {ip,"192.168.0.201"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}],
-	 [{host_id,"c1"},
-	  {ip,"192.168.1.201"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}],
-	 [{host_id,"c2"},
-	  {ip,"192.168.0.202"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}],
-	 [{host_id,"c2"},
-	  {ip,"192.168.1.202"},
-	  {ssh_port,22},
-	  {uid,"joq62"},
-	  {pwd,"festum01"}]]}=cluster_lib:read_config(?HostFile),
+    {ok,HostInfoConfig}=cluster_lib:read_config(?HostFile),
+    [[{host_id,"joq62-X550CA"},
+      {ip,"192.168.0.100"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}],
+     [{host_id,"joq62-X550CA"},
+      {ip,"192.168.1.50"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}],
+     [{host_id,"c0"},
+      {ip,"192.168.0.200"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}],
+     [{host_id,"c0"},
+      {ip,"192.168.1.200"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}],
+     [{host_id,"c1"},
+      {ip,"192.168.0.201"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}],
+     [{host_id,"c1"},
+      {ip,"192.168.1.201"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}],
+     [{host_id,"c2"},
+      {ip,"192.168.0.202"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}],
+     [{host_id,"c2"},
+      {ip,"192.168.1.202"},
+      {ssh_port,22},
+      {uid,"joq62"},
+      {pwd,"festum01"}]]=HostInfoConfig,
+
+    %------- etcd test
+    [db_host_info:create(HostId,Ip,SshPort,UId,Pwd)||
+	    [{host_id,HostId},
+	     {ip,Ip},
+	     {ssh_port,SshPort},
+	     {uid,UId},
+	     {pwd,Pwd}]<-HostInfoConfig],
+
+    [{"c0",_,22,"joq62","festum01"},
+     {"c0",_,22,"joq62","festum01"}]=db_host_info:read("c0"),
+    {atomic,[ok]}=db_host_info:delete("c0","192.168.0.200",22,"joq62","festum01"),
+    [{"c0","192.168.1.200",22,"joq62","festum01"}]=db_host_info:read("c0"),
+    
     ok.
 
 %% --------------------------------------------------------------------

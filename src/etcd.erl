@@ -20,7 +20,7 @@
 %
 %% --------------------------------------------------------------------
 -define(check_started_extra_node_time_out,10000).
--define(ControllerLeaderTime,30).
+
 %% --------------------------------------------------------------------
 %% Key Data structures
 %% 
@@ -36,7 +36,8 @@
 
 %% server interface
 -export([is_leader/0,
-	 host_info_create/1,
+	 host_info_create/5,
+	 host_info_delete/5,
 	 host_info_read/1]).
 
 -export([install/0]).
@@ -91,10 +92,13 @@ stop()-> gen_server:call(?MODULE, {stop},infinity).
 %%---------------- Etcd ------------------------------------------------
 is_leader()->
     gen_server:call(?MODULE,{is_leader},infinity).
-host_info_create(HostInfo)->
-    gen_server:call(?MODULE,{host_info_create,HostInfo},infinity).
+host_info_create(HostId,Ip,SshPort,UId,Pwd)->
+    gen_server:call(?MODULE,{host_info_create,HostId,Ip,SshPort,UId,Pwd},infinity).
+host_info_delete(HostId,Ip,SshPort,UId,Pwd)->
+    gen_server:call(?MODULE,{host_info_delete,HostId,Ip,SshPort,UId,Pwd},infinity).
 host_info_read(HostId)->
     gen_server:call(?MODULE,{host_info_read,HostId},infinity).
+
 
 %%----------------------------------------------------------------------
 sys_info()->
@@ -145,14 +149,12 @@ check_started_extra_node()->
 %
 %% --------------------------------------------------------------------
 init([]) ->
-    mnesia:stop(),
-    mnesia:delete_schema([node()]),
-    mnesia:start(),
-   %% Create supported tables
-    ok=db_lock:create_table(),
-    {atomic,ok}=db_lock:create(controller_leader,?ControllerLeaderTime),
-%    spawn(fun()->local_check_started_extra_node() end),
-%    spawn(fun()->gen_mnesia_lib:create_lock() end),
+    case application:get_env(is_leader) of
+	{ok,true}->
+	    etcd_leader:start();
+	{ok,false}->
+	    ok
+    end,
     {ok, #state{}}.
 
 %% --------------------------------------------------------------------
@@ -171,10 +173,16 @@ handle_call({ping}, _From, State) ->
     {reply, Reply, State};
 
 
-handle_call({is_leader}, _From, State) ->
-    Reply=db_lock:is_open(controller_leader),
+handle_call({host_info_create,HostId,Ip,SshPort,UId,Pwd}, _From, State) ->
+    Reply=db_host_info:create(HostId,Ip,SshPort,UId,Pwd),
     {reply, Reply, State};
 
+handle_call({host_info_delete,HostId,Ip,SshPort,UId,Pwd}, _From, State) ->
+    Reply=db_host_info:delete(HostId,Ip,SshPort,UId,Pwd),
+    {reply, Reply, State};
+handle_call({host_info_read,HostId}, _From, State) ->
+    Reply=db_host_info:read(HostId),
+    {reply, Reply, State};
 
 handle_call({sys_info}, _From, State) ->
     Reply=mnesia:system_info(),

@@ -3,7 +3,6 @@
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
-%-include("db_lock.hrl").
 
 -define(LockTimeOut, 30). %% 30 sec 
 -define(TABLE,lock).
