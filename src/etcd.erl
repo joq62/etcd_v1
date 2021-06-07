@@ -37,6 +37,7 @@
 %% server interface
 -export([
 	 cluster_info/0,
+	 cluster_info/1,
 	 catalog_info/0,
 	 host_info/0
 	]).
@@ -103,6 +104,9 @@ stop()-> gen_server:call(?MODULE, {stop},infinity).
 %%---------------- Etcd ------------------------------------------------
 cluster_info()->
     gen_server:call(?MODULE,{cluster_info},infinity).
+cluster_info(Name)->
+    gen_server:call(?MODULE,{cluster_info,Name},infinity).
+
 catalog_info()->
     gen_server:call(?MODULE,{catalog_info},infinity).
 host_info()->
@@ -205,6 +209,10 @@ handle_call({ping}, _From, State) ->
 handle_call({cluster_info}, _From, State) ->
     Reply=db_cluster_info:read_all(),
     {reply, Reply, State};
+handle_call({cluster_info,Name}, _From, State) ->
+    Reply=db_cluster_info:info(Name),
+    {reply, Reply, State};
+
 handle_call({catalog_info}, _From, State) ->
     Reply=db_catalog:read_all(),
     {reply, Reply, State};
