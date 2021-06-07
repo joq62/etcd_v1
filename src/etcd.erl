@@ -35,6 +35,13 @@
 
 
 %% server interface
+-export([
+	 cluster_info/0,
+	 catalog_info/0,
+	 host_info/0
+	]).
+
+
 -export([is_leader/0,
 	 host_info_create/5,
 	 host_info_delete/5,
@@ -94,6 +101,14 @@ stop()-> gen_server:call(?MODULE, {stop},infinity).
 
 
 %%---------------- Etcd ------------------------------------------------
+cluster_info()->
+    gen_server:call(?MODULE,{cluster_info},infinity).
+catalog_info()->
+    gen_server:call(?MODULE,{catalog_info},infinity).
+host_info()->
+    gen_server:call(?MODULE,{host_info},infinity).
+
+
 cluster_info_create(ClusterName,Cookie)->
     gen_server:call(?MODULE,{cluster_info_create,ClusterName,Cookie},infinity).
 
@@ -186,6 +201,16 @@ handle_call({ping}, _From, State) ->
     Reply={pong,node(),?MODULE},
     {reply, Reply, State};
 
+
+handle_call({cluster_info}, _From, State) ->
+    Reply=db_cluster_info:read_all(),
+    {reply, Reply, State};
+handle_call({catalog_info}, _From, State) ->
+    Reply=db_catalog:read_all(),
+    {reply, Reply, State};
+handle_call({host_info}, _From, State) ->
+    Reply=db_host_info:read_all(),
+    {reply, Reply, State};
 %-----------------
 handle_call({cluster_info_create,ClusterName,Cookie}, _From, State) ->
     Reply=db_cluster_info:create(ClusterName,Cookie),
