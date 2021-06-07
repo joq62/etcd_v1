@@ -48,13 +48,13 @@ start()->
 %    ok=pass_2(),
 %    io:format("~p~n",[{"Stop pass_2()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-    io:format("~p~n",[{"Start pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=pass_3(),
-    io:format("~p~n",[{"Stop pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    io:format("~p~n",[{"Start pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    ok=pass_3(),
+%    io:format("~p~n",[{"Stop pass_3()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-  %  io:format("~p~n",[{"Start pass_4()",?MODULE,?FUNCTION_NAME,?LINE}]),
-  %  ok=pass_4(),
-  %  io:format("~p~n",[{"Stop pass_4()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    io:format("~p~n",[{"Start pass_4()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=pass_4(),
+    io:format("~p~n",[{"Stop pass_4()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
   %  io:format("~p~n",[{"Start pass_5()",?MODULE,?FUNCTION_NAME,?LINE}]),
   %  ok=pass_5(),
@@ -124,7 +124,26 @@ pass_3()->
 %% Returns: non
 %% --------------------------------------------------------------------
 pass_4()->
-  
+    [controller_leader]=db_lock:read_all(),
+    [{"test_1",2,["c0","c1"],"test_1_cookie",[],false},
+     {"production",3,["c0","c1"],"production_cookie",[],false}
+    ]=db_cluster_info:read_all(),
+    
+    [{"c2","192.168.0.202",22,"joq62","festum01"},
+     {"c2","192.168.1.202",22,"joq62","festum01"},
+     {"c1","192.168.0.201",22,"joq62","festum01"},
+     {"c1","192.168.1.201",22,"joq62","festum01"},
+     {"c0","192.168.0.200",22,"joq62","festum01"},
+     {"c0","192.168.1.200",22,"joq62","festum01"},
+     {"joq62-X550CA","192.168.0.100",22,"joq62","festum01"},
+     {"joq62-X550CA","192.168.1.50",22,"joq62","festum01"}
+    ]=db_host_info:read_all(),
+    
+    [{"controller","1.0.0","https://github.com/joq62/controller.git"},
+     {"etcd","1.0.0","https://github.com/joq62/etcd.git"},
+     {"support","1.0.0","https://github.com/joq62/support.git"}
+    ]=db_catalog:read_all(),
+    
     ok.
 
 
@@ -247,8 +266,13 @@ pass_11()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
+-define(APP,etcd).
 setup()->
-   
+    rpc:call(node(),application,stop,[?APP],10*5000),
+    timer:sleep(500),
+    application:set_env([{?APP,[{is_leader,true}]}]),
+    ok=rpc:call(node(),application,start,[?APP],10*5000),
+    {pong,_,?APP}=rpc:call(node(),?APP,ping,[],1*5000),	
     ok.
 
 
