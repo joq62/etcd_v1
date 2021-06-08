@@ -45,10 +45,7 @@
 %% Returns: non
 %% --------------------------------------------------------------------
 start()->
-    mnesia:stop(),
-    mnesia:delete_schema([node()]),
-    mnesia:start(),
-
+    ok=etcd_lib:init(),
     %% Create tables and load inital data
     %--------------- lock
     ok=db_lock(),

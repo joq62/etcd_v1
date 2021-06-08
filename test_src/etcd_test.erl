@@ -56,9 +56,9 @@ start()->
     ok=pass_4(),
     io:format("~p~n",[{"Stop pass_4()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-  %  io:format("~p~n",[{"Start pass_5()",?MODULE,?FUNCTION_NAME,?LINE}]),
-  %  ok=pass_5(),
-  %  io:format("~p~n",[{"Stop pass_5()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    io:format("~p~n",[{"Start pass_5()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=pass_5(),
+    io:format("~p~n",[{"Stop pass_5()",?MODULE,?FUNCTION_NAME,?LINE}]),
  
     
    
@@ -90,7 +90,32 @@ pass_0()->
 %% Returns: non
 %% --------------------------------------------------------------------
 pass_5()->
+    {ok,HostId}=net:gethostname(),
+    {ok,S1}=slave:start(HostId,s1,"-setcookie abc"),
+    {ok,S2}=slave:start(HostId,s2,"-setcookie abc"),
+    [etcd_lib:add_node(Vm,ram_disc)||Vm<-nodes()],
+    
+    S1Tables=[{catalog,ram_copies},{host_info,ram_copies}],
+    S2Tables=[{cluster_info,ram_copies},{host_info,ram_copies}],
+    R1=[etcd_lib:add_table(S1,Table,StorageType)||{Table,StorageType}<-S1Tables],
+    [etcd_lib:add_table(S2,Table,StorageType)||{Table,StorageType}<-S2Tables],
+    
+ 
+%    io:format("~p~n",[mnesia:system_info()]),
+ %   io:format("~p~n",[nodes()]),
 
+    %Add nodes
+    ["joq62-X550CA","c2","c1","c0"]=mnesia:dirty_all_keys(host_info),
+    ["joq62-X550CA","c2","c1","c0"]=rpc:call(S1,mnesia,dirty_all_keys,[host_info]),
+    %Stop slave 
+    slave:stop(S1),
+    {badrpc,nodedown}=rpc:call(S1,mnesia,dirty_all_keys,[host_info]),
+    % Restart slave
+    {ok,S1}=slave:start(HostId,s1,"-setcookie abc"),
+    {badrpc,{'EXIT',{aborted,{no_exists,host_info}}}}=rpc:call(S1,mnesia,dirty_all_keys,[host_info]),
+    etcd_lib:add_node(S1,ram_disc),
+    timer:sleep(2000),
+    ["joq62-X550CA","c2","c1","c0"]=rpc:call(S1,mnesia,dirty_all_keys,[host_info]),
     ok.
 
 %% --------------------------------------------------------------------
@@ -285,6 +310,7 @@ setup()->
 cleanup()->
   
     application:stop(etcd),
+  %  init:stop(),
     ok.
 %% --------------------------------------------------------------------
 %% Function:start/0 
